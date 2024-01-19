@@ -1,23 +1,25 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET_KEY } = require("../config/env.config");
+
 const verifyToken = (req, res, next) => {
   if (req.headers && req.headers.authorization) {
     jwt.verify(
       req.headers.authorization,
-      "THIS IS SECRET",
+      JWT_SECRET_KEY,
       function (err, decode) {
         if (err) {
           req.user = null;
-          req.message = "Header verification failed, some issue with token";
+          req.msg = "Header verification failed, some issue with token";
         } else {
           req.user = decode.id;
-          req.message = "User found successfully";
+          req.msg = "User found successfully";
         }
         next();
       }
     );
   } else {
     req.user = null;
-    req.message = "Authorization header not found";
+    req.msg = "Authorization header not found";
     next();
   }
 };

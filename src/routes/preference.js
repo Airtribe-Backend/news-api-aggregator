@@ -1,44 +1,25 @@
-const express = require("express");
-const Router = express.Router();
+const newsAggregatorRoutes = require("express").Router();
+
+const newsAggregatorController = require("../controllers/newsAggregator.controller");
 
 const verifyToken = require("../middleware/authJWT");
-var registeredUsers = require("../helpers/registeredUsers");
 
-Router.get("/", verifyToken, (req, res) => {
-  if (req.user) {
-    const user = registeredUsers.find((user) => user.id == req.user);
-    if (!user) {
-      return res.status(404).send({ message: "User not found" });
-    }
+newsAggregatorRoutes.get(
+  "/preferences",
+  verifyToken,
+  newsAggregatorController.getUsersNewsPreferencesController
+);
 
-    return res.status(200).send({
-      message: "Preferences fetch successfully",
-      preferences: user.preferences,
-    });
-  } else {
-    return res.status(403).send({
-      message: req.message,
-    });
-  }
-});
+newsAggregatorRoutes.put(
+  "/preferences",
+  verifyToken,
+  newsAggregatorController.updateUsersNewsPreferencesController
+);
 
-Router.put("/", verifyToken, (req, res) => {
-  if (req.user) {
-    const newRegisteredUsers = registeredUsers.map((user) => {
-      if (user.id == req.user) {
-        user.preferences = req.body.preferences;
-      }
-      return user;
-    });
-    registeredUsers = newRegisteredUsers;
-    return res.status(200).send({
-      message: "Preferences updated successfully",
-    });
-  } else {
-    return res.status(403).send({
-      message: req.message,
-    });
-  }
-});
+newsAggregatorRoutes.get(
+  "/newspreferences",
+  verifyToken,
+  newsAggregatorController.getNewsBasisPreferencesController
+);
 
-module.exports = Router;
+module.exports = newsAggregatorRoutes;
