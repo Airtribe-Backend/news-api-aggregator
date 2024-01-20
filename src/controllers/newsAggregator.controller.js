@@ -1,9 +1,8 @@
 const usersDetails = require("../db/registeredUsers.json");
 const fs = require("fs");
-const URLSearchParams = require("url-search-params");
 const { fetchNews } = require("../services/newsapi");
 const { NEWS_API_AGGREGATOR_KEY } = require("../config/env.config");
-const { constructUrl } = require("../helpers/utility");
+const { constructUrl, map } = require("../helpers/utility");
 const URI_NEWS_API = "https://newsapi.org/v2/top-headlines";
 
 /* Get User News Preferences Controller */
@@ -57,6 +56,7 @@ const updateUsersNewsPreferencesController = (req, res, next) => {
                 msg: `Writing users news preferences in memory db failed: ${err}`,
               });
             } else {
+              if (map.has(user)) map.delete(user);
               return res.status(500).json({
                 status: 200,
                 msg: `User News Preferences updated successfully!`,
@@ -87,12 +87,19 @@ const updateUsersNewsPreferencesController = (req, res, next) => {
 /* Get News basis User Preferences Controller */
 const getNewsBasisPreferencesController = async (req, res, next) => {
   const { user, name, email, msg } = req;
-  let isCached = false;
   if (user) {
     let userfilteredData = usersDetails.users?.find(
       (users) => users.userId == user
     );
     if (userfilteredData.preferences.length) {
+      if (map.has(user)) {
+        console.log("response send through cache");
+        return res.status(200).json({
+          status: 200,
+          data: map.get(user),
+        });
+      }
+
       try {
         let payload = {
           language: "en",
@@ -102,6 +109,8 @@ const getNewsBasisPreferencesController = async (req, res, next) => {
         let searchParams = constructUrl(payload);
         let newsRes = await fetchNews(`${URI_NEWS_API}?${searchParams}`);
 
+        if (!map.has(user) && newsRes.status === 200)
+          map.set(user, newsRes.data.articles);
         return res.status(newsRes.status).json({
           status: 200,
           data: newsRes?.data?.articles,

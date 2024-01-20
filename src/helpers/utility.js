@@ -17,4 +17,6 @@ const constructUrl = (obj) => {
   return str;
 };
 
-module.exports = { constructUrl };
+const map = new Map();
+
+module.exports = { constructUrl, map };

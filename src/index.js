@@ -3,6 +3,8 @@ const app = express();
 
 const bodyParser = require("body-parser");
 
+const rateLimit = require("express-rate-limit");
+
 app.use(bodyParser.json());
 
 let port = 3000;
@@ -26,6 +28,16 @@ app.use(
     { stream: accessLogStream }
   )
 );
+
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 15 minutes
+  limit: 10, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+  standardHeaders: "draft-7", // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+  // store: ... , // Use an external store for consistency across multiple server instances.
+});
+
+app.use(limiter);
 
 //User login and register
 app.use("/auth", authRouter);
